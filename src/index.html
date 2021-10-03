@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hello World LeafLet Demonstration</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" integrity="sha512-xodZBNTC5n17Xt2atTPuE1HxjVMSvLVW9ocqUKLsCC5CXdbqCmblAshOMAS6/keqq/sMZMZ19scR4PsZChSR7A==" crossorigin="" />
+    <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js" integrity="sha512-XQoYMqMTK8LvdxXYG3nZ448hOEQiglfqkJs1NOQV44cWnUrBc8PkAOcXy20w0vlaXaVUearIOBhiXZ5V3ynxwA==" crossorigin=""></script>
+    <link rel="stylesheet" type="text/css" href="/css/style.css" />
+</head>
+
+<body>
+    <div class="container">
+        <div class="map-wrapper">
+            <div id="mapid">
+
+            </div>
+        </div>
+        <div id="countriesList">
+            <h1>Hello World!</h1>
+            <div class="small text-muted">
+                Select a country from the list to see location and details.
+            </div>
+            <div>
+                <select id="countriesSearch" type="text" name="country">
+                    <option option=""></option>
+                </select>
+            </div>
+        </div>
+    </div>
+
+    <script src="/data/countries.js"></script>
+    <script>
+        var initialLatitude = -2.943389;
+        var initialLongitude = 16.392431;
+        var initialZoom = 2;
+
+        var mymap = L.map('mapid').setView([initialLatitude, initialLongitude], initialZoom);
+
+        var countriesSelect = document.getElementById('countriesSearch');
+
+        countriesSelect.addEventListener('change', () => {
+            loadCountry(countriesSelect.value);
+        });
+
+        var formatNumberWithCommas = (number) => {
+            return number.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+        }
+
+        var loadCountries = () => {
+            for (var i = 0; i < countries.length; i++) {
+
+                var option = document.createElement('option');
+
+                option.text = countries[i]['name'];
+                option.value = countries[i]['country'];
+
+                countriesSelect.appendChild(option);
+            }
+        };
+
+        var loadCountry = (countryCode) => {
+            if (countriesSelect.value === '') {
+                return;
+            }
+
+            mymap.eachLayer(function (layer) {
+                if (layer['_popup']) {
+                    mymap.removeLayer(layer);
+                }
+            });
+
+            var latitude = initialLatitude;
+            var longitude = initialLongitude;
+            var zoom = initialZoom;
+            var country = '';
+            var foundResult = false;
+
+            for (var i = 0; i < countries.length; i++) {
+                if (countriesSelect.value === countries[i]['country']) {
+                    latitude = countries[i]['latitude'];
+                    longitude = countries[i]['longitude'];
+                    zoom = 9;
+                    country = 'The country of <b>' + countries[i]['name'] + '</b><br />Unfortunately we have no data on this area.';
+                    foundResult = true;
+
+                    if (countries[i]['continent'] && countries[i]['region'] && countries[i]['population']) {
+                        country = 'The country of <b>' + countries[i]['name'] + '</b><br />Located in the region ' + countries[i]['region'] + ', '
+                            + countries[i]['continent'] + '<br />With an estimated population of '
+                            + formatNumberWithCommas(countries[i]['population']);
+
+                        if (countries[i]['name'] === countries[i]['region'] && countries[i]['name'] === countries[i]['continent']) {
+                            country = 'The country of <b>' + countries[i]['name'] + '</b><br />Which is its own region!';
+                        }
+                    }
+
+                    break;
+                }
+            }
+
+            mymap.setView([latitude, longitude], zoom, { animation: true });
+
+            if (foundResult) {
+                marker = L.marker([latitude, longitude]).addTo(mymap)
+                    .bindPopup(country)
+                    .openPopup();
+            }
+        }
+
+        loadCountries();
+
+        L.tileLayer('YOUR-MAPBOX-API-LINK', {
+            attribution: 'Map data &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, Imagery © <a href="https://www.mapbox.com/">Mapbox</a>',
+            maxZoom: 18,
+            tileSize: 512,
+            zoomOffset: -1,
+            accessToken: 'YOUR-MAPBOX-API-TOKEN'
+        }).addTo(mymap);
+    </script>
+</body>
+
+</html>
